@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="primary_blue">#2563EB</color>
+    <color name="primary_blue_dark">#1D4ED8</color>
+    <color name="primary_blue_light">#DBEAFE</color>
+    <color name="bg_light">#F8FAFC</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="text_muted">#94A3B8</color>
+
+    <!-- Tag Colors -->
+    <color name="tag_ui_bg">#EFF6FF</color>
+    <color name="tag_ui_text">#2563EB</color>
+    <color name="tag_backend_bg">#F5F3FF</color>
+    <color name="tag_backend_text">#7C3AED</color>
+    <color name="tag_frontend_bg">#ECFDF5</color>
+    <color name="tag_frontend_text">#059669</color>
+    <color name="tag_qa_bg">#FFFBEB</color>
+    <color name="tag_qa_text">#D97706</color>
+    <color name="tag_design_bg">#FDF2F8</color>
+    <color name="tag_design_text">#DB2777</color>
+
+    <!-- Status Colors -->
+    <color name="status_overdue_bg">#FEE2E2</color>
+    <color name="status_overdue_text">#DC2626</color>
+    <color name="status_in_progress_bg">#DBEAFE</color>
+    <color name="status_in_progress_text">#2563EB</color>
+    <color name="status_todo_bg">#F3E8FF</color>
+    <color name="status_todo_text">#7C3AED</color>
+    <color name="status_done_bg">#D1FAE5</color>
+    <color name="status_done_text">#059669</color>
+
+    <!-- Priority Colors -->
+    <color name="priority_high">#EF4444</color>
+    <color name="priority_normal">#3B82F6</color>
+    <color name="priority_low">#10B981</color>
+    <color name="divider_color">#E2E8F0</color>
+</resources>
