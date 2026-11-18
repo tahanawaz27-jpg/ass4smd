@@ -23,6 +23,7 @@ import com.example.smdass4.model.Task;
 import com.example.smdass4.model.TaskItem;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class TasksFragment extends Fragment {
@@ -31,6 +32,7 @@ public class TasksFragment extends Fragment {
     private FragmentTasksBinding binding;
     private Project project;
     protected TaskAdapter adapter;
+    private List<TaskItem> displayedItems = new ArrayList<>();
 
     public interface OnTaskUpdatedListener {
         void onTaskUpdated(Project updatedProject);
@@ -96,31 +98,60 @@ public class TasksFragment extends Fragment {
     }
 
     protected void setupItemTouchHelper() {
-        ItemTouchHelper.SimpleCallback swipeCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+        ItemTouchHelper.SimpleCallback touchCallback = new ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP | ItemTouchHelper.DOWN,
+                ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT
+        ) {
 
             @Override
-            public int getSwipeDirs(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
-                int pos = viewHolder.getAdapterPosition();
-                if (pos != RecyclerView.NO_POSITION && adapter != null) {
-                    TaskItem item = adapter.getCurrentList().get(pos);
+            public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                int pos = viewHolder.getBindingAdapterPosition();
+                if (pos != RecyclerView.NO_POSITION && pos < displayedItems.size()) {
+                    TaskItem item = displayedItems.get(pos);
                     if (item != null && item.getType() == TaskItem.TYPE_HEADER) {
-                        return 0; // Headers cannot be swiped!
+                        return makeMovementFlags(0, 0); // Header cannot be moved or swiped
                     }
                 }
-                return super.getSwipeDirs(recyclerView, viewHolder);
+                return makeMovementFlags(ItemTouchHelper.UP | ItemTouchHelper.DOWN, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT);
             }
 
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                return false;
+                int fromPos = viewHolder.getBindingAdapterPosition();
+                int toPos = target.getBindingAdapterPosition();
+
+                if (fromPos < 0 || toPos < 0 || fromPos >= displayedItems.size() || toPos >= displayedItems.size()) {
+                    return false;
+                }
+
+                TaskItem fromItem = displayedItems.get(fromPos);
+                TaskItem toItem = displayedItems.get(toPos);
+
+                // Cannot swap if target is a header
+                if (toItem.getType() == TaskItem.TYPE_HEADER) {
+                    return false;
+                }
+
+                // Cannot drag into a different status group!
+                if (!fromItem.getStatusGroup().equalsIgnoreCase(toItem.getStatusGroup())) {
+                    return false;
+                }
+
+                // Swap in displayed list
+                Collections.swap(displayedItems, fromPos, toPos);
+                adapter.notifyItemMoved(fromPos, toPos);
+
+                // Sync order in project tasks collection
+                syncProjectTasksFromDisplayedItems();
+                return true;
             }
 
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                int pos = viewHolder.getAdapterPosition();
-                if (pos == RecyclerView.NO_POSITION || adapter == null) return;
+                int pos = viewHolder.getBindingAdapterPosition();
+                if (pos < 0 || pos >= displayedItems.size()) return;
 
-                TaskItem item = adapter.getCurrentList().get(pos);
+                TaskItem item = displayedItems.get(pos);
                 if (item == null || item.getTask() == null) return;
 
                 Task task = item.getTask();
@@ -143,8 +174,28 @@ public class TasksFragment extends Fragment {
             }
         };
 
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(swipeCallback);
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(touchCallback);
         itemTouchHelper.attachToRecyclerView(binding.rvTasks);
+    }
+
+    private void syncProjectTasksFromDisplayedItems() {
+        if (project == null || project.getTasks() == null) return;
+        List<Task> reordered = new ArrayList<>();
+        for (TaskItem item : displayedItems) {
+            if (item.getType() == TaskItem.TYPE_TASK && item.getTask() != null) {
+                reordered.add(item.getTask());
+            }
+        }
+        // Preserve any tasks filtered out by search
+        for (Task t : project.getTasks()) {
+            if (!reordered.contains(t)) {
+                reordered.add(t);
+            }
+        }
+        project.setTasks(reordered);
+        if (listener != null) {
+            listener.onTaskUpdated(project);
+        }
     }
 
     private void showDeleteConfirmationDialog(Task task, int position) {
@@ -201,41 +252,41 @@ public class TasksFragment extends Fragment {
             }
         }
 
-        List<TaskItem> items = new ArrayList<>();
+        displayedItems = new ArrayList<>();
 
         // Group 1: Overdue
         if (!overdueList.isEmpty()) {
-            items.add(new TaskItem("Overdue", overdueList.size(), "Overdue"));
+            displayedItems.add(new TaskItem("Overdue", overdueList.size(), "Overdue"));
             for (Task t : overdueList) {
-                items.add(new TaskItem(t, "Overdue"));
+                displayedItems.add(new TaskItem(t, "Overdue"));
             }
         }
 
         // Group 2: In progress
         if (!inProgressList.isEmpty()) {
-            items.add(new TaskItem("In Progress", inProgressList.size(), "In Progress"));
+            displayedItems.add(new TaskItem("In Progress", inProgressList.size(), "In Progress"));
             for (Task t : inProgressList) {
-                items.add(new TaskItem(t, "In Progress"));
+                displayedItems.add(new TaskItem(t, "In Progress"));
             }
         }
 
         // Group 3: To do
         if (!todoList.isEmpty()) {
-            items.add(new TaskItem("To Do", todoList.size(), "To Do"));
+            displayedItems.add(new TaskItem("To Do", todoList.size(), "To Do"));
             for (Task t : todoList) {
-                items.add(new TaskItem(t, "To Do"));
+                displayedItems.add(new TaskItem(t, "To Do"));
             }
         }
 
         // Group 4: Done
         if (!doneList.isEmpty()) {
-            items.add(new TaskItem("Done", doneList.size(), "Done"));
+            displayedItems.add(new TaskItem("Done", doneList.size(), "Done"));
             for (Task t : doneList) {
-                items.add(new TaskItem(t, "Done"));
+                displayedItems.add(new TaskItem(t, "Done"));
             }
         }
 
-        adapter.submitList(items);
+        adapter.submitList(new ArrayList<>(displayedItems));
     }
 
     private void setupSearch() {
