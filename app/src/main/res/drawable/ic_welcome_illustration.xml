@@ -1,0 +1,28 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- Outer background circle -->
+    <path
+        android:fillColor="#EFF6FF"
+        android:pathData="M100,10a90,90 0 1,0 0,180a90,90 0 1,0 0,-180" />
+    <!-- Decorative app boxes -->
+    <path
+        android:fillColor="#2563EB"
+        android:pathData="M60,60h25v25h-25z" />
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M115,60h25v25h-25z" />
+    <path
+        android:fillColor="#EC4899"
+        android:pathData="M60,115h25v25h-25z" />
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M115,115h25v25h-25z" />
+    <!-- Connecting lines -->
+    <path
+        android:strokeColor="#94A3B8"
+        android:strokeWidth="3"
+        android:pathData="M85,72h30 M72,85v30 M127,85v30 M85,127h30" />
+</vector>
